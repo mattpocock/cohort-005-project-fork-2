@@ -88,7 +88,7 @@ function addLessons(courseId: number, lessonCount: number) {
   }
 }
 
-function get() {
+function landingPage() {
   return createLanding(db).get();
 }
 
@@ -100,7 +100,7 @@ describe("featured courses", () => {
     addCourse("Middle", { createdAt: "2026-03-01T00:00:00.000Z" });
     addCourse("Newer", { createdAt: "2026-05-01T00:00:00.000Z" });
 
-    expect(get().featuredCourses.map((c) => c.title)).toEqual([
+    expect(landingPage().featuredCourses.map((c) => c.title)).toEqual([
       "Newest",
       "Newer",
       "Middle",
@@ -117,7 +117,9 @@ describe("featured courses", () => {
       createdAt: "2026-09-01T00:00:00.000Z",
     });
 
-    expect(get().featuredCourses.map((c) => c.title)).toEqual(["Test Course"]);
+    expect(landingPage().featuredCourses.map((c) => c.title)).toEqual([
+      "Test Course",
+    ]);
   });
 
   it("carries what a course card shows", () => {
@@ -125,7 +127,7 @@ describe("featured courses", () => {
     const author = addInstructor("Ada Author");
     const course = addCourse("Shown", { owner: author.id });
 
-    expect(get().featuredCourses).toEqual([
+    expect(landingPage().featuredCourses).toEqual([
       {
         id: course.id,
         title: "Shown",
@@ -146,7 +148,7 @@ describe("featured courses", () => {
     addLessons(baseCourseId, 1);
 
     const counts = Object.fromEntries(
-      get().featuredCourses.map((c) => [c.title, c.lessonCount])
+      landingPage().featuredCourses.map((c) => [c.title, c.lessonCount])
     );
     expect(counts).toEqual({ Busy: 5, "Test Course": 1 });
   });
@@ -154,7 +156,7 @@ describe("featured courses", () => {
   it("features nothing when nothing is published", () => {
     db.delete(schema.courses).run();
 
-    expect(get().featuredCourses).toEqual([]);
+    expect(landingPage().featuredCourses).toEqual([]);
   });
 });
 
@@ -163,7 +165,7 @@ describe("stats", () => {
     for (let i = 0; i < 4; i++) addCourse(`Course ${i}`);
     addCourse("Draft", { status: CourseStatus.Draft });
 
-    expect(get().stats.courses).toBe(5);
+    expect(landingPage().stats.courses).toBe(5);
   });
 
   it("counts lessons in published courses only", () => {
@@ -171,7 +173,7 @@ describe("stats", () => {
     const draft = addCourse("Draft", { status: CourseStatus.Draft });
     addLessons(draft.id, 7);
 
-    expect(get().stats.lessons).toBe(4);
+    expect(landingPage().stats.lessons).toBe(4);
   });
 
   it("counts each instructor with a published course once", () => {
@@ -181,7 +183,7 @@ describe("stats", () => {
     addCourse("By the second", { owner: second.id });
     addCourse("Draft", { status: CourseStatus.Draft, owner: unpublished.id });
 
-    expect(get().stats.instructors).toBe(2);
+    expect(landingPage().stats.instructors).toBe(2);
   });
 
   it("counts each category with a published course once", () => {
@@ -192,14 +194,14 @@ describe("stats", () => {
     addCourse("More layout", { category: design.id });
     addCourse("Draft data", { status: CourseStatus.Draft, category: data.id });
 
-    expect(get().stats.categories).toBe(2);
+    expect(landingPage().stats.categories).toBe(2);
   });
 
   it("is all zeros on an empty catalogue", () => {
     db.delete(schema.courses).run();
     db.delete(schema.categories).run();
 
-    expect(get().stats).toEqual({
+    expect(landingPage().stats).toEqual({
       courses: 0,
       lessons: 0,
       instructors: 0,
