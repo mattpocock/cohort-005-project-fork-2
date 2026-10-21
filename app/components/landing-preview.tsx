@@ -8,6 +8,12 @@ const PREVIEW_LESSONS = [
   { title: "Quiz: the type system", state: "todo" },
 ] as const;
 
+const PERCENT_COMPLETE = Math.round(
+  (PREVIEW_LESSONS.filter((lesson) => lesson.state === "done").length /
+    PREVIEW_LESSONS.length) *
+    100
+);
+
 const lessonIcon = {
   done: <CheckCircle2 className="size-4 shrink-0 text-primary" />,
   current: <PlayCircle className="size-4 shrink-0 text-foreground" />,
@@ -28,11 +34,14 @@ export function LandingPreview() {
             <p className="mt-1 font-semibold">Introduction to TypeScript</p>
           </div>
           <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-            40% complete
+            {PERCENT_COMPLETE}% complete
           </span>
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
-          <div className="h-full w-2/5 rounded-full bg-primary" />
+          <div
+            className="h-full rounded-full bg-primary"
+            style={{ width: `${PERCENT_COMPLETE}%` }}
+          />
         </div>
         <ul className="mt-6 space-y-1">
           {PREVIEW_LESSONS.map((lesson) => (
