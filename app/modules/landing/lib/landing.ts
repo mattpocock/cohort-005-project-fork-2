@@ -86,6 +86,7 @@ function getStats(database: Db): LandingStats {
     .select({
       courses: count(courses.id),
       instructors: countDistinct(courses.instructorId),
+      categories: countDistinct(courses.categoryId),
     })
     .from(courses)
     .where(isPublished)
@@ -99,16 +100,11 @@ function getStats(database: Db): LandingStats {
     .where(isPublished)
     .get();
 
-  const categoryStats = database
-    .select({ categories: count(categories.id) })
-    .from(categories)
-    .get();
-
   return {
     courses: courseStats?.courses ?? 0,
     instructors: courseStats?.instructors ?? 0,
     lessons: lessonStats?.lessons ?? 0,
-    categories: categoryStats?.categories ?? 0,
+    categories: courseStats?.categories ?? 0,
   };
 }
 

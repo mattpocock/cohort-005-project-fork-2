@@ -1,11 +1,7 @@
 import { db } from "~/db";
 import { getLandingPage, type Db } from "./lib/landing";
 
-export type {
-  FeaturedCourse,
-  LandingPage,
-  LandingStats,
-} from "./lib/landing";
+export type { FeaturedCourse, LandingPage, LandingStats } from "./lib/landing";
 
 /**
  * The public landing page bound to a database. The app uses `landing`, which

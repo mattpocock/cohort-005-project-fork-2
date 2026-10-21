@@ -50,7 +50,13 @@ function addCourse(
     status = CourseStatus.Published,
     createdAt = "2026-01-01T00:00:00.000Z",
     owner = instructorId,
-  }: { status?: CourseStatus; createdAt?: string; owner?: number } = {}
+    category = categoryId,
+  }: {
+    status?: CourseStatus;
+    createdAt?: string;
+    owner?: number;
+    category?: number;
+  } = {}
 ) {
   slugCounter += 1;
   return db
@@ -61,7 +67,7 @@ function addCourse(
       description: `${title} description`,
       salesCopy: markdown(title),
       instructorId: owner,
-      categoryId,
+      categoryId: category,
       status,
       createdAt,
     })
@@ -178,11 +184,15 @@ describe("stats", () => {
     expect(get().stats.instructors).toBe(2);
   });
 
-  it("counts every category", () => {
-    addCategory("Design");
-    addCategory("Data");
+  it("counts each category with a published course once", () => {
+    const design = addCategory("Design");
+    const data = addCategory("Data");
+    addCategory("Empty");
+    addCourse("Layout", { category: design.id });
+    addCourse("More layout", { category: design.id });
+    addCourse("Draft data", { status: CourseStatus.Draft, category: data.id });
 
-    expect(get().stats.categories).toBe(3);
+    expect(get().stats.categories).toBe(2);
   });
 
   it("is all zeros on an empty catalogue", () => {
