@@ -37,14 +37,13 @@ import {
 } from "~/modules/lesson-viewer/discussion.server";
 import {
   getQuizByLessonId,
+  getQuizForLesson,
   getQuizWithQuestions,
   getBestAttempt,
   computeResult,
 } from "~/modules/lesson-viewer/quiz.server";
 import { MAX_NOTE_LENGTH } from "~/lib/notes";
 import { db } from "~/db";
-import { quizzes } from "~/db/schema";
-import { eq } from "drizzle-orm";
 import { Button } from "~/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { renderMarkdown } from "~/lib/markdown.server";
@@ -74,6 +73,14 @@ const saveNoteSchema = z.object({
       `Your note is over ${MAX_NOTE_LENGTH.toLocaleString("en")} characters, so it was not saved.`
     ),
 });
+
+const submitQuizSchema = z.object({
+  quizId: z.coerce.number().int().positive(),
+});
+
+// Answers arrive as "question-{questionId}" = optionId, one field per question.
+const quizAnswerKey = z.string().regex(/^question-\d+$/);
+const quizOptionId = z.coerce.number().int().positive();
 
 const deleteCommentSchema = z.object({
   intent: z.literal("delete-comment"),
@@ -457,26 +464,24 @@ export async function action({ params, request }: Route.ActionArgs) {
   }
 
   if (intent === "submit-quiz") {
-    const quizId = Number(formData.get("quizId"));
-    if (isNaN(quizId)) {
+    const parsed = parseFormData(formData, submitQuizSchema);
+    if (!parsed.success) {
       throw data("Invalid quiz ID", { status: 400 });
     }
+    const { quizId } = parsed.data;
     // Scope the quiz to this lesson so a quiz elsewhere can't be reached by
     // posting its id to this route.
-    const quiz = db.select().from(quizzes).where(eq(quizzes.id, quizId)).get();
-    if (!quiz || quiz.lessonId !== lessonId) {
+    const quiz = getQuizForLesson(quizId, lessonId);
+    if (!quiz) {
       throw data("Quiz not found", { status: 404 });
     }
 
-    // Collect answers: form fields named "question-{questionId}" with value = optionId
     const selectedAnswers: Record<number, number> = {};
     for (const [key, value] of formData.entries()) {
-      if (key.startsWith("question-")) {
-        const questionId = Number(key.replace("question-", ""));
-        const optionId = Number(value);
-        if (!isNaN(questionId) && !isNaN(optionId)) {
-          selectedAnswers[questionId] = optionId;
-        }
+      if (!quizAnswerKey.safeParse(key).success) continue;
+      const optionId = quizOptionId.safeParse(value);
+      if (optionId.success) {
+        selectedAnswers[Number(key.slice("question-".length))] = optionId.data;
       }
     }
 

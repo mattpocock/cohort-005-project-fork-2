@@ -12,6 +12,15 @@ export function getQuizByLessonId(lessonId: number) {
   return db.select().from(quizzes).where(eq(quizzes.lessonId, lessonId)).get();
 }
 
+/** The quiz, only if it belongs to the lesson; `undefined` otherwise. */
+export function getQuizForLesson(quizId: number, lessonId: number) {
+  return db
+    .select()
+    .from(quizzes)
+    .where(and(eq(quizzes.id, quizId), eq(quizzes.lessonId, lessonId)))
+    .get();
+}
+
 export function getQuizWithQuestions(quizId: number) {
   const quiz = db.select().from(quizzes).where(eq(quizzes.id, quizId)).get();
   if (!quiz) return null;
