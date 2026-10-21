@@ -13,12 +13,14 @@ export function describeDraft(
   draft: string,
   savedBody: string | null
 ): NoteDraft {
-  const tooLong = draft.length > MAX_NOTE_LENGTH;
-  const empty = draft.trim().length === 0;
-  const unsaved = draft !== (savedBody ?? "");
+  // The server trims before it stores and measures, so judge the text it will keep.
+  const kept = draft.trim();
+  const tooLong = kept.length > MAX_NOTE_LENGTH;
+  const empty = kept.length === 0;
+  const unsaved = kept !== (savedBody ?? "");
 
   return {
-    length: draft.length,
+    length: kept.length,
     limit: MAX_NOTE_LENGTH,
     tooLong,
     empty,

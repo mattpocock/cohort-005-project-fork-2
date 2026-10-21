@@ -44,6 +44,21 @@ describe("describeNoteDraft", () => {
     expect(draft.canSave).toBe(false);
   });
 
+  it("has nothing to save when only surrounding whitespace differs", () => {
+    const draft = describeNoteDraft("idea\n", "idea");
+
+    expect(draft.unsaved).toBe(false);
+    expect(draft.canSave).toBe(false);
+  });
+
+  it("does not count surrounding whitespace toward the limit", () => {
+    const draft = describeNoteDraft(` ${"a".repeat(MAX_NOTE_LENGTH)} `, null);
+
+    expect(draft.length).toBe(MAX_NOTE_LENGTH);
+    expect(draft.tooLong).toBe(false);
+    expect(draft.canSave).toBe(true);
+  });
+
   it("allows a note exactly at the limit", () => {
     const draft = describeNoteDraft("a".repeat(MAX_NOTE_LENGTH), null);
 
